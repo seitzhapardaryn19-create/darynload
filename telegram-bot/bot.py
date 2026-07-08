@@ -115,10 +115,14 @@ async def handle_format_choice(callback: CallbackQuery) -> None:
         )
     except Exception as exc:
         logger.exception("Download failed")
+        # Показываем реальный текст ошибки (обрезанный), чтобы понять причину
+        err_text = str(exc)
+        if len(err_text) > 300:
+            err_text = err_text[:300] + "..."
         await callback.message.edit_text(
             "Не удалось скачать. Возможно, видео приватное, удалено "
-            "или сайт временно блокирует запросы.\n"
-            f"Ошибка: {type(exc).__name__}"
+            "или сайт временно блокирует запросы.\n\n"
+            f"Детали: {err_text}"
         )
         return
 
@@ -145,12 +149,13 @@ async def handle_format_choice(callback: CallbackQuery) -> None:
 def download_media(url: str, audio_only: bool) -> tuple[str, str]:
     """Скачивает медиа во временную папку. Возвращает (путь, название)."""
     tmp_dir = tempfile.mkdtemp(prefix="tgdl_")
+
     ydl_opts = {
         "outtmpl": os.path.join(tmp_dir, "%(title).80s.%(ext)s"),
         "noplaylist": True,
         "quiet": True,
         "no_warnings": True,
-              # Обход блокировки YouTube для датацентровых IP:
+        # Обход блокировки YouTube для датацентровых IP:
         # представляемся мобильными клиентами YouTube вместо браузера
         "extractor_args": {
             "youtube": {
@@ -165,7 +170,8 @@ def download_media(url: str, audio_only: bool) -> tuple[str, str]:
         ),
         "merge_output_format": None if audio_only else "mp4",
     }
- # Запасной вариант: cookies из переменной окружения YT_COOKIES
+
+    # Запасной вариант: cookies из переменной окружения YT_COOKIES
     # (содержимое файла cookies.txt в формате Netscape)
     cookies_data = os.environ.get("YT_COOKIES")
     if cookies_data:
@@ -186,16 +192,8 @@ def download_media(url: str, audio_only: bool) -> tuple[str, str]:
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         info = ydl.extract_info(url, download=True)
         title = info.get("title", "media")
- # Запасной вариант: cookies из переменной окружения YT_COOKIES
-    # (содержимое файла cookies.txt в формате Netscape)
-    cookies_data = os.environ.get("YT_COOKIES")
-    if cookies_data:
-        cookies_path = os.path.join(tmp_dir, "cookies.txt")
-        with open(cookies_path, "w") as f:
-            f.write(cookies_data)
-        ydl_opts["cookiefile"] = cookies_path
 
-    files = os.listdir(tmp_dir)
+    files = [f for f in os.listdir(tmp_dir) if f != "cookies.txt"]
     if not files:
         raise RuntimeError("Файл не был скачан")
 
