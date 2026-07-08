@@ -6,6 +6,11 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends ffmpeg \
     && rm -rf /var/lib/apt/lists/*
 
+# Deno — JavaScript-движок, необходимый новым версиям yt-dlp
+# для расшифровки форматов YouTube. Без него YouTube не отдаёт
+# форматы и возникает ошибка "Requested format is not available".
+COPY --from=denoland/deno:bin /deno /usr/local/bin/deno
+
 WORKDIR /app
 
 COPY requirements.txt .
