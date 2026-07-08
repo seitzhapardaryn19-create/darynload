@@ -165,6 +165,14 @@ def download_media(url: str, audio_only: bool) -> tuple[str, str]:
         ),
         "merge_output_format": None if audio_only else "mp4",
     }
+ # Запасной вариант: cookies из переменной окружения YT_COOKIES
+    # (содержимое файла cookies.txt в формате Netscape)
+    cookies_data = os.environ.get("YT_COOKIES")
+    if cookies_data:
+        cookies_path = os.path.join(tmp_dir, "cookies.txt")
+        with open(cookies_path, "w") as f:
+            f.write(cookies_data)
+        ydl_opts["cookiefile"] = cookies_path
 
     if audio_only:
         ydl_opts["postprocessors"] = [
@@ -178,6 +186,14 @@ def download_media(url: str, audio_only: bool) -> tuple[str, str]:
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         info = ydl.extract_info(url, download=True)
         title = info.get("title", "media")
+ # Запасной вариант: cookies из переменной окружения YT_COOKIES
+    # (содержимое файла cookies.txt в формате Netscape)
+    cookies_data = os.environ.get("YT_COOKIES")
+    if cookies_data:
+        cookies_path = os.path.join(tmp_dir, "cookies.txt")
+        with open(cookies_path, "w") as f:
+            f.write(cookies_data)
+        ydl_opts["cookiefile"] = cookies_path
 
     files = os.listdir(tmp_dir)
     if not files:
