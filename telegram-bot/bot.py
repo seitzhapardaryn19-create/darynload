@@ -145,12 +145,18 @@ async def handle_format_choice(callback: CallbackQuery) -> None:
 def download_media(url: str, audio_only: bool) -> tuple[str, str]:
     """Скачивает медиа во временную папку. Возвращает (путь, название)."""
     tmp_dir = tempfile.mkdtemp(prefix="tgdl_")
-
     ydl_opts = {
         "outtmpl": os.path.join(tmp_dir, "%(title).80s.%(ext)s"),
         "noplaylist": True,
         "quiet": True,
         "no_warnings": True,
+              # Обход блокировки YouTube для датацентровых IP:
+        # представляемся мобильными клиентами YouTube вместо браузера
+        "extractor_args": {
+            "youtube": {
+                "player_client": ["android", "ios", "web"],
+            }
+        },
         # Ограничиваем качество, чтобы уложиться в лимит 50 МБ
         "format": (
             "bestaudio/best"
