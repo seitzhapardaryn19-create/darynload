@@ -35,8 +35,8 @@ PORT = int(os.environ.get("PORT", 8080))
 MAX_FILE_SIZE = 50 * 1024 * 1024
 
 URL_PATTERN = re.compile(
-    r"https?://(?:www\.)?"
-    r"(?:youtube\.com|youtu\.be|tiktok\.com|vm\.tiktok\.com|instagram\.com)"
+    r"https?://(?:[\w-]+\.)*"
+    r"(?:youtube\.com|youtu\.be|tiktok\.com|instagram\.com)"
     r"/\S+",
     re.IGNORECASE,
 )
