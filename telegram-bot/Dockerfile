@@ -13,4 +13,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY bot.py .
 
-CMD ["python", "bot.py"]
+# Обновляем yt-dlp при каждом старте контейнера:
+# YouTube часто меняет защиту, и только свежая версия yt-dlp её обходит
+CMD ["sh", "-c", "pip install --no-cache-dir -U yt-dlp && python bot.py"]
