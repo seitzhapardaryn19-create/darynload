@@ -155,23 +155,19 @@ def download_media(url: str, audio_only: bool) -> tuple[str, str]:
         "noplaylist": True,
         "quiet": True,
         "no_warnings": True,
-        # Обход блокировки YouTube для датацентровых IP:
-        # представляемся мобильными клиентами YouTube вместо браузера
-        "extractor_args": {
-            "youtube": {
-                "player_client": ["android", "ios", "web"],
-            }
-        },
-        # Ограничиваем качество, чтобы уложиться в лимит 50 МБ
+        # Гибкий выбор формата с цепочкой запасных вариантов:
+        # 720p mp4 -> 720p любой -> лучший доступный.
+        # Строгий фильтр по filesize убран: YouTube часто не сообщает
+        # размер заранее, и такой фильтр отбрасывает все форматы.
         "format": (
             "bestaudio/best"
             if audio_only
-            else "best[filesize<48M]/bv*[height<=720]+ba/b[height<=720]/best"
+            else "bv*[height<=720][ext=mp4]+ba[ext=m4a]/bv*[height<=720]+ba/b[height<=720]/b"
         ),
         "merge_output_format": None if audio_only else "mp4",
     }
 
-    # Запасной вариант: cookies из переменной окружения YT_COOKIES
+    # Cookies из переменной окружения YT_COOKIES
     # (содержимое файла cookies.txt в формате Netscape)
     cookies_data = os.environ.get("YT_COOKIES")
     if cookies_data:
@@ -179,6 +175,14 @@ def download_media(url: str, audio_only: bool) -> tuple[str, str]:
         with open(cookies_path, "w") as f:
             f.write(cookies_data)
         ydl_opts["cookiefile"] = cookies_path
+    else:
+        # Без cookies представляемся мобильными клиентами YouTube —
+        # это помогает обходить блокировку датацентровых IP.
+        # ВАЖНО: android/ios клиенты не работают вместе с cookies,
+        # поэтому включаем их только когда cookies не заданы.
+        ydl_opts["extractor_args"] = {
+            "youtube": {"player_client": ["android", "ios", "web"]}
+        }
 
     if audio_only:
         ydl_opts["postprocessors"] = [
