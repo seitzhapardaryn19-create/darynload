@@ -223,6 +223,12 @@ async def start_web_server() -> None:
 # ---------- Запуск ----------
 
 async def main() -> None:
+    # Диагностика окружения: эти строки видны в логах Render при старте
+    logger.info("yt-dlp version: %s", yt_dlp.version.__version__)
+    logger.info("deno found at: %s", shutil.which("deno") or "NOT FOUND!")
+    logger.info("ffmpeg found at: %s", shutil.which("ffmpeg") or "NOT FOUND!")
+    logger.info("YT_COOKIES set: %s", "yes" if os.environ.get("YT_COOKIES") else "no")
+
     await start_web_server()
     logger.info("Bot polling started")
     await dp.start_polling(bot)
